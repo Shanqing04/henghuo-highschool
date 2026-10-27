@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>横火管理后台</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/auth.js"></script>
+<style>
+    .adm-toolbar { display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+    .adm-toolbar input { border:1px solid #c8ccd5; padding:7px 10px; font-size:14px; width:260px; border-radius:2px; }
+    .pager { display:flex; gap:6px; justify-content:center; margin-top:14px; }
+    .pager button { padding:4px 12px; border:1px solid #c8ccd5; background:#fff; cursor:pointer; }
+    .pager button.active { background:#1a4fa0; color:#fff; border-color:#1a4fa0; }
+    .pager button:disabled { color:#bbb; cursor:not-allowed; }
+    .adm-tabs { display:flex; gap:0; margin-bottom:14px; border-bottom:2px solid #e2e6ef; }
+    .adm-tabs button {
+        background:transparent;border:none;padding:10px 20px;cursor:pointer;
+        font-size:14px;color:#666;border-bottom:2px solid transparent;margin-bottom:-2px;
+    }
+    .adm-tabs button.active { color:#1a4fa0; border-bottom-color:#1a4fa0; font-weight:700; }
+    .adm-tabs button:hover { color:#1a4fa0; }
+    .header-right { margin-left:auto; font-size:13px; }
+    .header-right a { color:#1a4fa0; margin-left:10px; }
+    .reset-pw-input { width:130px; padding:4px 6px; border:1px solid #c8ccd5; border-radius:2px; font-size:12px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="inner">
+        <img class="emblem" src="/static/校徽.png" alt="校徽">
+        <div class="titles">
+            <h1>报 名 数 据 管 理 后 台</h1>
+            <p>HENGHUO  ADMIN  ·  统 一 管 理 控 制 台</p>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="card">
+        <div class="panel">
+            <h2>数据一览</h2><p style="margin:12px 0"><a class="btn btn-primary" href="/admin/news">进入校园新闻与通报管理 →</a></p>
+
+            <div class="adm-tabs">
+                <button class="active" data-kind="registration" onclick="switchKind('registration')">报名记录</button>
+                <button data-kind="users" onclick="switchKind('users')">注册学生账号</button>
+            </div>
+
+            <div class="adm-toolbar">
+                <input type="text" id="kw" placeholder="姓名 / 学号 / 考生号 / 手机号 搜索">
+                <button class="btn btn-next" onclick="loadList(1)">搜索</button>
+                <button class="btn" onclick="document.getElementById('kw').value='';loadList(1)">重置</button>
+                <span class="header-right">
+                    <a href="/" target="_blank">门户首页</a>
+                    <a href="/gaokao" target="_blank">高考报名</a>
+                    <a href="#" onclick="doLogout();return false;">退出登录</a>
+                </span>
+            </div>
+
+            <table class="admin-table" id="adm-table">
+                <thead id="adm-thead"></thead>
+                <tbody></tbody>
+            </table>
+            <div class="pager" id="pager"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let page = 1, size = 10, total = 0, kind = "registration";
+
+function escapeHtml(s) {
+    if (s == null) return "";
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+async function checkAdmin() {
+    const u = await Auth.me();
+    if (!u || u.role !== "admin") {
+        location.href = "/admin/login";
+        return false;
+    }
+    return true;
+}
+async function doLogout() {
+    await Auth.logout();
+    location.href = "/admin/login";
+}
+
+function switchKind(k) {
+    kind = k; page = 1;
+    document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.remove("active"));
+    document.querySelector(`.adm-tabs button[data-kind='${k}']`).classList.add("active");
+    loadList(1);
+}
+
+async function loadList(p) {
+    page = p || 1;
+    const kw = document.getElementById("kw").value.trim();
+    const url = `/api/admin/list?kind=${kind}&page=${page}&size=${size}&keyword=${encodeURIComponent(kw)}`;
+    let r;
+    try { r = await fetch(url).then(r => r.json()); }
+    catch { showToast("网络错误","error"); return; }
+    if (!r.success) {
+        if (r.msg === "管理员未登录") { location.href = "/admin/login"; return; }
+        showToast(r.msg || "加载失败", "error"); return;
+    }
+    total = r.data.total;
+    if (kind === "registration") renderRegistration(r.data.list);
+    else renderUsers(r.data.list);
+    renderPager();
+}
+
+function renderRegistration(list) {
+    const thead = document.getElementById("adm-thead");
+    thead.innerHTML = `<tr>
+        <th style="width:40px;">#</th><th>考生号</th><th>姓名</th><th>性别</th>
+        <th>出生</th><th>身份证号(脱敏)</th><th>科类</th><th>状态</th>
+        <th>时间</th><th style="width:160px;">操作</th>
+    </tr>`;
+    const tb = document.querySelector("#adm-table tbody");
+    if (!list.length) { tb.innerHTML = `<tr><td colspan="10" style="padding:40px;color:#999;text-align:center;">暂无报名数据</td></tr>`; return; }
+    tb.innerHTML = list.map(d => `
+        <tr>
+            <td>${d.id}</td>
+            <td><strong style="color:#1a4fa0;">${escapeHtml(d.exam_no)}</strong></td>
+            <td>${escapeHtml(d.name)}</td>
+            <td>${escapeHtml(d.gender)}</td>
+            <td>${escapeHtml(d.birth_date)}</td>
+            <td style="font-family:monospace;font-size:12px;">${escapeHtml(d.id_card)}</td>
+            <td>${escapeHtml(d.subject_category) || "-"}</td>
+            <td>${statusBadge(d.status)}</td>
+            <td style="font-size:12px;">${escapeHtml(d.created_at)}</td>
+            <td>
+                <a class="btn" style="padding:3px 8px;font-size:12px;" href="/api/ticket/${d.exam_no}" target="_blank">准考证</a>
+                <a class="btn" style="padding:3px 8px;font-size:12px;" href="/api/admin/detail/${d.id}" target="_blank">详情</a>
+                <button class="btn btn-danger" style="padding:3px 8px;font-size:12px;" onclick="delReg(${d.id})">删除</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function renderUsers(list) {
+    const thead = document.getElementById("adm-thead");
+    thead.innerHTML = `<tr>
+        <th style="width:40px;">#</th><th>学号</th><th>账号</th><th>姓名</th><th>性别</th>
+        <th>班级</th><th>角色</th><th>手机号(脱敏)</th><th>状态</th>
+        <th style="width:320px;">操作</th>
+    </tr>`;
+    const tb = document.querySelector("#adm-table tbody");
+    if (!list.length) { tb.innerHTML = `<tr><td colspan="10" style="padding:40px;color:#999;text-align:center;">暂无注册数据</td></tr>`; return; }
+    tb.innerHTML = list.map(d => `
+        <tr>
+            <td>${d.id}</td>
+            <td><strong style="color:#1a4fa0;">${escapeHtml(d.student_no)}</strong></td>
+            <td>${escapeHtml(d.username)}</td>
+            <td>${escapeHtml(d.name)}</td>
+            <td>${escapeHtml(d.gender)}</td>
+            <td>${escapeHtml(d.class_name) || "-"}</td>
+            <td>${d.role === "admin" ? '<span class="badge badge-red">管理员</span>' : '<span class="badge badge-blue">学生</span>'}</td>
+            <td style="font-family:monospace;font-size:12px;">${escapeHtml(d.phone) || "-"}</td>
+            <td>${d.status === "active" ? '<span class="badge badge-green">正常</span>' :
+                   d.status === "frozen" ? '<span class="badge badge-orange">已冻结</span>' :
+                   '<span class="badge badge-red">已注销</span>'}</td>
+            <td>
+                <button class="btn" style="padding:3px 8px;font-size:12px;" onclick="toggleFreeze(${d.id},'${d.status}')">
+                    ${d.status === "frozen" ? "解冻" : "冻结"}
+                </button>
+                <input class="reset-pw-input" id="rpw-${d.id}" placeholder="新密码(默认 HengHuo@123)">
+                <button class="btn btn-primary" style="padding:3px 8px;font-size:12px;" onclick="resetPw(${d.id})">重置密码</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function statusBadge(s) {
+    if (s === "已修改") return '<span class="badge badge-orange">已修改</span>';
+    if (s === "已提交") return '<span class="badge badge-green">已提交</span>';
+    return `<span class="badge badge-red">${s}</span>`;
+}
+
+function renderPager() {
+    const totalPages = Math.max(1, Math.ceil(total / size));
+    let html = `<button ${page<=1?"disabled":""} onclick="loadList(${page-1})">上一页</button>`;
+    const from = Math.max(1, page - 2), to = Math.min(totalPages, page + 2);
+    for (let i = from; i <= to; i++) html += `<button class="${i===page?'active':''}" onclick="loadList(${i})">${i}</button>`;
+    html += `<button ${page>=totalPages?"disabled":""} onclick="loadList(${page+1})">下一页</button>`;
+    html += `<span style="margin-left:12px;color:#666;font-size:12px;">共 ${total} 条 / ${totalPages} 页</span>`;
+    document.getElementById("pager").innerHTML = html;
+}
+
+async function delReg(id) {
+    if (!confirm("确定删除？此操作不可恢复")) return;
+    const r = await fetch(`/api/admin/registration/${id}`, { method: "DELETE" }).then(r => r.json());
+    if (r.success) { showToast("已删除","success"); loadList(page); }
+    else showToast("删除失败","error");
+}
+async function toggleFreeze(uid, status) {
+    const action = status === "frozen" ? "unfreeze" : "freeze";
+    const r = await fetch(`/api/admin/user/${uid}/${action}`, { method: "POST" }).then(r => r.json());
+    if (r.success) { showToast("操作成功","success"); loadList(page); }
+    else showToast(r.msg || "失败","error");
+}
+async function resetPw(uid) {
+    const input = document.getElementById("rpw-" + uid);
+    const fd = new FormData();
+    fd.append("new_password", input.value || "HengHuo@123456");
+    const r = await fetch(`/api/admin/user/${uid}/reset_password`, { method: "POST", body: fd }).then(r => r.json());
+    if (r.success) showToast(r.msg, "success");
+    else showToast(r.msg || "重置失败", "error");
+}
+
+checkAdmin().then(ok => ok && loadList(1));
+</script>
+
+<footer style="text-align:center;padding:20px 12px;font-size:12px;color:#888;border-top:1px solid #eee;margin-top:30px;">横火企划模拟系统 · 仅供创作使用，非真实政务/学籍系统</footer>
+</body>
+</html>
