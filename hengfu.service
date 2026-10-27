@@ -1,0 +1,47 @@
+# ============================================================
+# 横火高级中学模拟系统 · systemd 服务文件
+# ============================================================
+# 使用方法（服务器上执行）：
+#   cp deploy/hengfu.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable hengfu    # 开机自启
+#   systemctl start hengfu
+#   systemctl status hengfu    # 查看状态
+#   journalctl -u hengfu -f    # 实时看日志
+# ============================================================
+
+[Unit]
+Description=HengFu High School Flask Web App
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/hengfu
+
+# 加载 .env 环境变量（如果有）
+EnvironmentFile=/opt/hengfu/.env
+
+# gunicorn 启动（4 workers × 2 threads，足够中小型站点）
+ExecStart=/opt/hengfu/venv/bin/gunicorn \
+    -w 4 \
+    --threads 2 \
+    -b 127.0.0.1:5000 \
+    --access-logfile  /opt/hengfu/logs/access.log \
+    --error-logfile   /opt/hengfu/logs/error.log \
+    --timeout 60 \
+    wsgi:app
+
+# 自动重启
+Restart=always
+RestartSec=3
+
+# 安全加固
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hengfu
+
+[Install]
+WantedBy=multi-user.target

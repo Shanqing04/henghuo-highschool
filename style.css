@@ -1,0 +1,438 @@
+/* =========================================================
+   横火高级中学 · 模拟高考报名系统
+   视觉风格：写实政务风（白底 / 深蓝标题 / 红色点缀）
+   ========================================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9;
+    color: #222;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+a { color: #1a4fa0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- 顶部横幅 ---------- */
+.site-header {
+    background: linear-gradient(180deg, #8b0000 0%, #a51c30 100%);
+    color: #fff;
+    border-bottom: 4px solid #1a4fa0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.site-header .inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 22px 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.site-header .emblem {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: #fff;
+    object-fit: contain;
+    flex-shrink: 0;
+    border: 2px solid #f1d67a;
+    box-shadow: 0 0 0 1px #a51c30 inset, 0 2px 6px rgba(0,0,0,.25);
+    display: block;
+    padding: 2px;
+    box-sizing: border-box;
+}
+.site-header .titles h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 4px;
+}
+.site-header .titles p {
+    font-size: 13px;
+    opacity: .85;
+    letter-spacing: 2px;
+    margin-top: 2px;
+}
+
+/* ---------- 顶部工具条 ---------- */
+.top-bar {
+    background: #fff;
+    border-bottom: 1px solid #e2e6ef;
+}
+.top-bar .inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 8px 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+}
+
+/* ---------- 主容器 ---------- */
+.container {
+    max-width: 1100px;
+    margin: 24px auto 40px;
+    padding: 0 20px;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #dfe3eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    border-radius: 2px;
+}
+
+/* ---------- 步骤条 ---------- */
+.steps {
+    display: flex;
+    border-bottom: 1px solid #e2e6ef;
+    background: #fafbfd;
+}
+.step {
+    flex: 1;
+    text-align: center;
+    padding: 14px 8px;
+    font-size: 14px;
+    color: #888;
+    position: relative;
+    cursor: default;
+    border-right: 1px solid #eef0f5;
+}
+.step:last-child { border-right: none; }
+.step .no {
+    display: inline-block;
+    width: 26px; height: 26px; line-height: 26px;
+    border-radius: 50%;
+    background: #dde3ee;
+    color: #fff;
+    font-weight: 700;
+    margin-right: 6px;
+    font-size: 13px;
+}
+.step.active { color: #a51c30; font-weight: 700; background: #fff; }
+.step.active .no { background: #a51c30; }
+.step.done { color: #1a4fa0; }
+.step.done .no { background: #1a4fa0; }
+
+/* ---------- 面板 ---------- */
+.panel { padding: 28px 36px; }
+.panel h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a4fa0;
+    border-left: 4px solid #a51c30;
+    padding-left: 10px;
+    margin-bottom: 18px;
+}
+.panel h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #d9dce3;
+}
+.panel .hint {
+    font-size: 12px;
+    color: #999;
+    background: #f7f8fb;
+    border-left: 3px solid #ccc;
+    padding: 6px 10px;
+    margin-bottom: 14px;
+}
+
+/* ---------- 表单 ---------- */
+.form-row {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.form-row .field {
+    flex: 1 1 240px;
+    display: flex;
+    align-items: center;
+    min-width: 220px;
+}
+.form-row .field .label {
+    width: 110px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 10px;
+    color: #333;
+    font-size: 14px;
+}
+.form-row .field .label .req {
+    color: #c0392b;
+    margin-right: 2px;
+}
+.form-row .field input[type=text],
+.form-row .field input[type=number],
+.form-row .field input[type=date],
+.form-row .field input[type=tel],
+.form-row .field select,
+.form-row .field textarea {
+    flex: 1;
+    border: 1px solid #c8ccd5;
+    background: #fff;
+    padding: 7px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #222;
+    outline: none;
+    border-radius: 2px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.form-row .field textarea { resize: vertical; min-height: 60px; }
+.form-row .field input:focus,
+.form-row .field select:focus,
+.form-row .field textarea:focus {
+    border-color: #1a4fa0;
+    box-shadow: 0 0 0 2px rgba(26,79,160,.15);
+}
+.form-row .field input[readonly] {
+    background: #f3f5f9;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* 单选/多选 */
+.radio-group { display: flex; gap: 18px; flex-wrap: wrap; }
+.radio-group label {
+    display: inline-flex; align-items: center; gap: 4px;
+    cursor: pointer; font-size: 14px;
+}
+.radio-group input[type=radio],
+.radio-group input[type=checkbox] { accent-color: #a51c30; }
+
+/* ---------- 照片上传 ---------- */
+.photo-upload {
+    display: flex; gap: 28px; align-items: flex-start;
+    margin-top: 6px;
+}
+.photo-upload .preview {
+    width: 180px; height: 240px;
+    border: 1px solid #c8ccd5;
+    background: #fafbfd;
+    display: flex; align-items: center; justify-content: center;
+    color: #aaa; font-size: 12px;
+    overflow: hidden; flex-shrink: 0;
+}
+.photo-upload .preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-upload .actions { flex: 1; }
+.btn-file {
+    display: inline-block;
+    padding: 7px 18px;
+    background: #1a4fa0;
+    color: #fff;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 14px;
+    border: 1px solid #1a4fa0;
+}
+.btn-file:hover { background: #123a7a; }
+.btn-file input[type=file] { display: none; }
+.photo-upload .actions .tip {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #888;
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+    display: inline-block;
+    padding: 9px 28px;
+    font-size: 14px;
+    border: 1px solid #c8ccd5;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: inherit;
+    transition: all .15s;
+}
+.btn:hover { border-color: #1a4fa0; color: #1a4fa0; }
+.btn-primary {
+    background: #a51c30; color: #fff; border-color: #a51c30;
+}
+.btn-primary:hover { background: #7d1625; color: #fff; border-color: #7d1625; }
+.btn-next {
+    background: #1a4fa0; color: #fff; border-color: #1a4fa0;
+}
+.btn-next:hover { background: #123a7a; color: #fff; border-color: #123a7a; }
+.btn-danger {
+    background: #fff; color: #a51c30; border-color: #a51c30;
+}
+.btn-danger:hover { background: #fdf0f2; }
+
+.btn-group {
+    display: flex; gap: 12px; justify-content: center;
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid #eef0f5;
+}
+
+/* ---------- 确认页信息表 ---------- */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.info-table th, .info-table td {
+    border: 1px solid #dfe3eb;
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+}
+.info-table th {
+    background: #f3f5f9;
+    color: #333;
+    width: 140px;
+    font-weight: 700;
+}
+.info-table tr:nth-child(even) th { background: #eef2f8; }
+
+/* ---------- 准考证卡片预览 ---------- */
+.ticket-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    background: #f7f8fb;
+    border: 1px dashed #c8ccd5;
+    margin: 10px 0 20px;
+    flex-wrap: wrap;
+}
+.ticket-wrap img {
+    max-width: 380px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    border: 1px solid #e2e6ef;
+}
+
+/* ---------- 后台表格 ---------- */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.admin-table th, .admin-table td {
+    border: 1px solid #dfe3eb;
+    padding: 7px 10px;
+    text-align: left;
+}
+.admin-table th {
+    background: #1a4fa0;
+    color: #fff;
+    font-weight: 700;
+}
+.admin-table tr:nth-child(even) td { background: #fafbfd; }
+.admin-table tr:hover td { background: #f2f4f9; }
+
+/* ---------- 状态标签 ---------- */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 12px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+}
+.badge-green { background: #e8f4ea; color: #2d7a3d; border-color: #b7dcc0; }
+.badge-orange { background: #fef4e5; color: #a05b14; border-color: #f3d29a; }
+.badge-red { background: #fdecee; color: #a51c30; border-color: #eab8be; }
+.badge-blue { background: #e8f0fc; color: #1a4fa0; border-color: #b5cff1; }
+
+/* ---------- 弹窗/Toast ---------- */
+.toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #fff;
+    border: 1px solid #e2e6ef;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18);
+    padding: 12px 22px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity .25s, transform .25s;
+    max-width: 80%;
+    border-left: 4px solid #a51c30;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-left-color: #2d7a3d; }
+.toast.warn { border-left-color: #a05b14; }
+.toast.info { border-left-color: #1a4fa0; }
+
+/* 确认弹窗 */
+.modal-mask {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.4);
+    display: none; align-items: center; justify-content: center;
+    z-index: 9998;
+}
+.modal-mask.show { display: flex; }
+.modal {
+    background: #fff;
+    border: 1px solid #dfe3eb;
+    min-width: 340px; max-width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+.modal .modal-head {
+    padding: 14px 18px;
+    background: #1a4fa0;
+    color: #fff;
+    font-weight: 700;
+}
+.modal .modal-body { padding: 18px; font-size: 14px; color: #333; }
+.modal .modal-foot {
+    padding: 12px 18px;
+    border-top: 1px solid #eef0f5;
+    text-align: right;
+}
+
+/* ---------- 底部 ---------- */
+.site-footer {
+    background: #2a2d35;
+    color: #aaa;
+    font-size: 12px;
+    padding: 18px 20px;
+    text-align: center;
+    margin-top: 40px;
+}
+.site-footer .warn {
+    color: #e8b966;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+/* ---------- 查询入口 ---------- */
+.query-bar {
+    display: flex; gap: 10px;
+    background: #fafbfd;
+    border: 1px solid #e2e6ef;
+    padding: 14px 18px;
+    align-items: center;
+    border-radius: 2px;
+    margin-bottom: 20px;
+}
+.query-bar label { color: #333; font-weight: 700; font-size: 14px; }
+.query-bar input {
+    flex: 1;
+    border: 1px solid #c8ccd5;
+    padding: 7px 10px;
+    font-size: 14px;
+    border-radius: 2px;
+    max-width: 300px;
+}
+
+/* ---------- 辅助 ---------- */
+.text-center { text-align: center; }
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+.hide { display: none !important; }
+
+@media (max-width: 700px) {
+    .panel { padding: 20px 16px; }
+    .form-row .field { min-width: 100%; flex: 1 1 100%; }
+    .photo-upload { flex-direction: column; }
+    .site-header .titles h1 { font-size: 20px; letter-spacing: 2px; }
+}

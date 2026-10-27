@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>横火管理后台 · 登录</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/auth.js"></script>
+<style>
+    .auth-wrap { max-width: 420px; margin: 60px auto; padding: 0 20px; }
+    .auth-card { background:#fff; border:1px solid #dfe3eb; padding:30px 36px; box-shadow:0 4px 14px rgba(0,0,0,.06); }
+    .auth-card h2 { font-size:20px; color:#a51c30; border-left:4px solid #1a4fa0; padding-left:10px; margin-bottom:20px; }
+    .auth-card .field { margin-bottom:16px; }
+    .auth-card .field label { display:block; font-size:13px; color:#444; margin-bottom:6px; }
+    .auth-card .field input { width:100%; border:1px solid #c8ccd5; padding:9px 12px; font-size:14px; border-radius:2px; outline:none; font-family:inherit; }
+    .auth-card .field input:focus { border-color:#a51c30; box-shadow:0 0 0 2px rgba(165,28,48,.15); }
+    .auth-card .banner-logo { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+    .auth-card .banner-logo img { width:56px; height:56px; border-radius:50%; border:2px solid #1a4fa0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="inner">
+        <img class="emblem" src="/static/校徽.png" alt="校徽">
+        <div class="titles">
+            <h1>横 火 高 级 中 学</h1>
+            <p>HENGHUO  HIGH  SCHOOL  ·  管 理 员 入 口</p>
+        </div>
+    </div>
+</header>
+
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="banner-logo">
+            <img src="/static/校徽.png" alt="校徽">
+            <div>
+                <h2 style="border:none;padding:0;color:#1a4fa0;">横火管理后台</h2>
+                <p style="font-size:12px;color:#666;margin-top:2px;">管理员登录入口 · 仅限授权人员使用</p>
+            </div>
+        </div>
+
+        <form onsubmit="doLogin(event)">
+            <div class="field">
+                <label><span style="color:#c0392b;">*</span> 管理员账号</label>
+                <input type="text" id="identifier" placeholder="请输入账号" autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label><span style="color:#c0392b;">*</span> 密码</label>
+                <input type="password" id="password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:11px;font-size:15px;">登 录 后 台</button>
+            <div style="margin-top:12px;text-align:center;font-size:13px;color:#666;">
+                返回 <a href="/">门户首页</a>
+            </div>
+            <div style="margin-top:10px;font-size:12px;color:#888;background:#f7f8fb;padding:8px;border-left:3px solid #ccc;">
+                初始管理员账号：<code>admin</code> / <code>admin123456</code><br>
+                请登录后尽快修改密码。
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+async function doLogin(e) {
+    e.preventDefault();
+    const identifier = document.getElementById("identifier").value.trim();
+    const password = document.getElementById("password").value;
+    if (!identifier || !password) { showToast("请填写账号和密码", "warn"); return; }
+    const btn = e.submitter; btn.disabled = true; btn.textContent = "登录中...";
+    const res = await Auth.login(identifier, password);
+    btn.disabled = false; btn.textContent = "登 录 后 台";
+    if (!res.success) { showToast(res.msg || "登录失败", "error"); return; }
+    if (res.data.role !== "admin") {
+        showToast("该账号不是管理员", "error");
+        await Auth.logout();
+        return;
+    }
+    showToast("登录成功", "success");
+    setTimeout(() => location.href = "/admin", 400);
+}
+
+Auth.me().then(u => { if (u && u.role === "admin") location.href = "/admin"; });
+</script>
+
+<footer style="text-align:center;padding:20px 12px;font-size:12px;color:#888;border-top:1px solid #eee;margin-top:30px;">横火企划模拟系统 · 仅供创作使用，非真实政务/学籍系统</footer>
+</body>
+</html>

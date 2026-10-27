@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>横火校园门户</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/auth.js"></script>
+<style>
+    .portal-wrap { max-width: 960px; margin: 24px auto; padding: 0 20px; }
+    .welcome-card {
+        background: linear-gradient(135deg, #a51c30 0%, #8b0000 100%);
+        color: #fff; padding: 26px 30px; margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(165,28,48,.25);
+        border-left: 5px solid #f1d67a;
+    }
+    .welcome-card .hi { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .welcome-card .meta { font-size: 13px; opacity: .9; letter-spacing: 1px; }
+    .welcome-card .student-badge {
+        display:inline-block;background:#fff;color:#a51c30;font-weight:900;
+        padding:4px 16px;font-size:18px;border-radius:2px;letter-spacing:3px;
+        margin-top:12px;border:1px solid #f1d67a;
+    }
+    .welcome-card .logout {
+        position:absolute;right:24px;top:24px;background:rgba(255,255,255,.2);
+        border:1px solid rgba(255,255,255,.5);color:#fff;padding:6px 14px;
+        cursor:pointer;font-size:12px;border-radius:2px;
+    }
+    .modules { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; }
+    .module {
+        background:#fff;border:1px solid #dfe3eb;padding:22px 18px;cursor:pointer;
+        transition:all .15s;text-decoration:none;color:#333;display:block;
+    }
+    .module:hover { border-color:#1a4fa0; box-shadow:0 4px 12px rgba(26,79,160,.1); transform:translateY(-2px); }
+    .module .icon {
+        font-size:32px;margin-bottom:10px;display:block;
+    }
+    .module .title { font-size:15px;font-weight:700;color:#1a4fa0;margin-bottom:4px; }
+    .module .desc { font-size:12px;color:#777; }
+    .module.disabled { opacity:.4; cursor:not-allowed; }
+    .module.disabled:hover { transform:none; box-shadow:none; border-color:#dfe3eb; }
+    .section-title {
+        font-size:14px;color:#1a4fa0;font-weight:700;margin:22px 0 10px;
+        padding-left:10px;border-left:4px solid #1a4fa0;
+    }
+    .account-card {
+        background:#fff;border:1px solid #dfe3eb;padding:16px 20px;margin-bottom:16px;
+        display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    }
+    .account-card .action { display:flex; gap:8px; }
+    .account-card .action .btn { padding:6px 14px;font-size:13px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="inner">
+        <img class="emblem" src="/static/校徽.png" alt="校徽">
+        <div class="titles">
+            <h1>横 火 高 级 中 学</h1>
+            <p>HENGHUO  HIGH  SCHOOL  ·  校 园 统 一 门 户</p>
+        </div>
+    </div>
+</header>
+
+<div class="portal-wrap">
+
+    <div class="welcome-card" style="position:relative;">
+        <div class="hi" id="welcome-hi">加载中...</div>
+        <div class="meta" id="welcome-meta"></div>
+        <div class="student-badge" id="welcome-no"></div>
+        <button class="logout" onclick="doLogout()">退出登录</button>
+    </div>
+
+    <div class="section-title">子系统入口</div>
+    <div class="modules">
+        <a class="module" href="/gaokao">
+            <span class="icon">📝</span>
+            <div class="title">高考报名</div>
+            <div class="desc">提交模拟报名信息 · 生成准考证</div>
+        </a>
+        <a class="module disabled" href="javascript:showToast('该子系统尚未开放，敬请期待','warn')">
+            <span class="icon">🍚</span>
+            <div class="title">食堂系统</div>
+            <div class="desc">点餐 · 消费记录（企划规划中）</div>
+        </a>
+        <a class="module disabled" href="javascript:showToast('该子系统尚未开放，敬请期待','warn')">
+            <span class="icon">🏫</span>
+            <div class="title">学校官网</div>
+            <div class="desc">新闻 · 通知（企划规划中）</div>
+        </a>
+        <a class="module" href="/archive">
+            <span class="icon">📄</span>
+            <div class="title">学生信息查询</div>
+            <div class="desc">档案目录 · 荣誉榜 · 年级排名</div>
+        </a>
+    </div>
+
+    <div class="section-title">账号管理</div>
+    <div class="account-card">
+        <div>
+            <strong style="color:#1a4fa0;">账号：<span id="acc-username"></span></strong>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <span style="color:#666;">注册时间：<span id="acc-created"></span></span>
+        </div>
+        <div class="action">
+            <button class="btn" onclick="openChangePw()">修改密码</button>
+            <button class="btn" onclick="showToast('企划模拟：请管理员重置','info')">找回密码</button>
+        </div>
+    </div>
+
+</div>
+
+<div id="cpw-mask" class="modal-mask" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9999;">
+    <div class="modal" style="background:#fff;min-width:380px;border:1px solid #dfe3eb;">
+        <div class="modal-head" style="padding:14px 18px;background:#1a4fa0;color:#fff;font-weight:700;">修改密码</div>
+        <div class="modal-body" style="padding:18px;">
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:13px;color:#444;margin-bottom:4px;">旧密码</label>
+                <input type="password" id="cpw-old" style="width:100%;border:1px solid #c8ccd5;padding:7px 10px;font-size:14px;border-radius:2px;outline:none;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:13px;color:#444;margin-bottom:4px;">新密码（≥ 8 位，字母 + 数字）</label>
+                <input type="password" id="cpw-new" style="width:100%;border:1px solid #c8ccd5;padding:7px 10px;font-size:14px;border-radius:2px;outline:none;">
+            </div>
+            <div>
+                <label style="display:block;font-size:13px;color:#444;margin-bottom:4px;">确认新密码</label>
+                <input type="password" id="cpw-confirm" style="width:100%;border:1px solid #c8ccd5;padding:7px 10px;font-size:14px;border-radius:2px;outline:none;">
+            </div>
+        </div>
+        <div class="modal-foot" style="padding:12px 18px;border-top:1px solid #eef0f5;text-align:right;">
+            <button class="btn" onclick="closeChangePw()">取消</button>
+            <button class="btn btn-primary" onclick="doChangePw()">确认修改</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUser = null;
+async function init() {
+    currentUser = await Auth.requireLogin();
+    if (!currentUser) return;
+    document.getElementById("welcome-hi").textContent =
+        currentUser.role === "admin" ? "管理员您好" : `${currentUser.name}，欢迎回到横火校园`;
+    const parts = [];
+    if (currentUser.class_name) parts.push(currentUser.class_name);
+    if (currentUser.grade_segment) parts.push(currentUser.grade_segment);
+    if (currentUser.graduate_school) parts.push(currentUser.graduate_school);
+    document.getElementById("welcome-meta").textContent = parts.join(" · ") || "统一身份认证系统";
+    document.getElementById("welcome-no").textContent = "学 号：" + currentUser.student_no;
+
+    document.getElementById("acc-username").textContent = currentUser.username;
+    document.getElementById("acc-created").textContent = currentUser.created_at;
+
+    if (currentUser.role === "admin") {
+        // 管理员显示管理入口
+        const modules = document.querySelector(".modules");
+        const adminMod = document.createElement("a");
+        adminMod.className = "module";
+        adminMod.href = "/admin";
+        adminMod.innerHTML = `<span class="icon">🛠️</span><div class="title">管理后台</div><div class="desc">查看所有学生 · 重置密码</div>`;
+        modules.appendChild(adminMod);
+    }
+}
+
+async function doLogout() {
+    if (!confirm("确定退出登录吗？")) return;
+    await Auth.logout();
+    location.href = "/login";
+}
+
+function openChangePw() { document.getElementById("cpw-mask").style.display = "flex"; }
+function closeChangePw() { document.getElementById("cpw-mask").style.display = "none"; }
+
+async function doChangePw() {
+    const oldPw = document.getElementById("cpw-old").value;
+    const newPw = document.getElementById("cpw-new").value;
+    const confirmPw = document.getElementById("cpw-confirm").value;
+    if (!oldPw || !newPw) { showToast("请填写完整", "warn"); return; }
+    if (newPw !== confirmPw) { showToast("两次新密码不一致", "error"); return; }
+    const r = await Auth.changePassword(oldPw, newPw, confirmPw);
+    if (r.success) { showToast("密码修改成功", "success"); closeChangePw(); }
+    else showToast(r.msg || "修改失败", "error");
+}
+
+init();
+</script>
+
+<footer style="background:#2c2f36;color:#aab0bc;text-align:center;padding:18px 12px;font-size:12px;margin-top:40px;border-top:1px solid #eef0f5;">
+横火企划模拟系统 · 仅供创作使用，非真实政务/学籍系统
+</footer>
+</body>
+</html>
