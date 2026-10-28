@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>横火高级中学 · 登录</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/auth.js"></script>
+<style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { max-width: 100%; }
+    .auth-wrap { width:100%; max-width: 420px; margin: 50px auto; padding: 0 20px; }
+    .auth-card { width:100%; min-width:0; background:#fff; border:1px solid #dfe3eb; padding:30px 36px; box-shadow:0 4px 14px rgba(0,0,0,.06); }
+    .auth-card h2 { font-size:22px; color:#1a4fa0; border-left:4px solid #a51c30; padding-left:10px; margin-bottom:20px; }
+    .auth-card .field { margin-bottom:16px; min-width:0; }
+    .auth-card .field label { display:block; font-size:13px; color:#444; margin-bottom:6px; }
+    .auth-card .field input, .auth-card .field select {
+        display:block; width:100%; max-width:100%; min-width:0;
+        box-sizing:border-box; border:1px solid #c8ccd5; padding:11px 12px;
+        font-size:16px; border-radius:2px; outline:none; font-family:inherit;
+    }
+    .auth-card .field input:focus { border-color:#1a4fa0; box-shadow:0 0 0 2px rgba(26,79,160,.15); }
+    .auth-card .hint { font-size:12px; color:#888; margin-top:4px; overflow-wrap:anywhere; }
+    .auth-card .row2 { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; font-size:13px; color:#666; margin:6px 0 14px; }
+    .auth-card .row2 input[type="checkbox"] { width:auto; display:inline-block; }
+    .auth-card .sub { display:flex; gap:12px; flex-wrap:wrap; }
+    .auth-card .sub a { color:#1a4fa0; font-size:13px; }
+    .auth-card .banner-logo { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+    .auth-card .banner-logo img { width:56px; height:56px; border-radius:50%; border:2px solid #f1d67a; flex-shrink:0; }
+    .auth-card .banner-logo h1 { font-size:18px; color:#a51c30; letter-spacing:3px; font-weight:700; }
+    .auth-card .banner-logo p { font-size:11px; color:#666; letter-spacing:1px; }
+    .tab-row { display:flex; border-bottom:1px solid #e2e6ef; margin-bottom:18px; }
+    .tab-row .tab { flex:1; text-align:center; padding:10px 0; cursor:pointer; color:#666; font-size:14px; border-bottom:2px solid transparent; }
+    .tab-row .tab.active { color:#1a4fa0; border-bottom-color:#1a4fa0; font-weight:700; }
+    @media (max-width:480px) {
+        .auth-wrap { margin:20px auto; padding:0 12px; }
+        .auth-card { padding:22px 16px; }
+        .auth-card .banner-logo h1 { font-size:16px; letter-spacing:1px; }
+        .auth-card .banner-logo p { letter-spacing:0; }
+    }
+</style>
+</head>
+<body>
+<header class="site-header">
+    <div class="inner">
+        <img class="emblem" src="/static/校徽.png" alt="校徽">
+        <div class="titles">
+            <h1>横 火 高 级 中 学</h1>
+            <p>HENGHUO  HIGH  SCHOOL  ·  统 一 身 份 认 证 平 台</p>
+        </div>
+    </div>
+</header>
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="banner-logo">
+            <img src="/static/校徽.png" alt="校徽">
+            <div><h1>横火统一身份认证</h1><p>学生账号一次注册 · 多系统通用</p></div>
+        </div>
+        <div class="tab-row">
+            <div class="tab active" onclick="showTab('student')">学生登录</div>
+            <div class="tab" onclick="showTab('admin')">管理员登录</div>
+        </div>
+        <form id="login-form" onsubmit="doLogin(event)">
+            <div class="field">
+                <label for="identifier"><span style="color:#c0392b;">*</span> 账号 / 学号 / 手机号</label>
+                <input type="text" id="identifier" placeholder="三种方式任选" autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label for="password"><span style="color:#c0392b;">*</span> 密码</label>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" required>
+            </div>
+            <div class="row2">
+                <label><input type="checkbox" id="remember" checked> 7 天内免登录</label>
+                <a href="javascript:alert('企划模拟：请管理员重置密码')">忘记密码？</a>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:11px;font-size:15px;">登 录</button>
+            <div class="sub">
+                <span>还没有账号？<a href="/register">立即注册</a></span>
+                <span style="margin-left:auto;"><a href="/admin/login">管理员入口</a></span>
+            </div>
+            <div class="hint" style="margin-top:10px;padding:8px;background:#fff7e6;border-left:3px solid #e8b966;border-radius:2px;">
+                <strong>※ 模拟系统提示</strong><br>
+                学生账号由自己注册；管理员初始账号 <code>admin / admin123456</code>。<br>
+                登录失败 5 次将被锁定 15 分钟。
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function showTab(kind) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    if (kind === "admin") {
+        window.location.href = "/admin/login";
+        return;
+    }
+    document.querySelector(".tab").classList.add("active");
+}
+async function doLogin(e) {
+    e.preventDefault();
+    const identifier = document.getElementById("identifier").value.trim();
+    const password   = document.getElementById("password").value;
+    const remember   = document.getElementById("remember").checked;
+    if (!identifier || !password) { showToast("请填写账号和密码", "warn"); return; }
+    const btn = e.submitter;
+    btn.disabled = true; btn.textContent = "登录中...";
+    const res = await Auth.login(identifier, password, remember);
+    btn.disabled = false; btn.textContent = "登 录";
+    if (!res.success) { showToast(res.msg || "登录失败", "error"); return; }
+    showToast(`欢迎回来，${res.data.name}（${res.data.student_no}）`, "success");
+    setTimeout(() => location.href = "/archive", 400);
+}
+Auth.me().then(u => { if (u) location.href = "/archive"; });
+</script>
+<footer style="text-align:center;padding:20px 12px;font-size:12px;color:#888;border-top:1px solid #eee;margin-top:30px;">横火企划模拟系统 · 仅供创作使用，非真实政务/学籍系统</footer>
+</body>
+</html>
