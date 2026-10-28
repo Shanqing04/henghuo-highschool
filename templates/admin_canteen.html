@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>横火高中 · 食堂管理</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+body{background:#f5f7fb;color:#24314d;font-family:"Microsoft YaHei",sans-serif}
+.wrap{max-width:1050px;margin:28px auto;padding:0 16px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:23px;color:#1a4fa0}h2{font-size:18px;margin:0 0 16px}
+.panel{background:white;border:1px solid #dfe5f0;border-radius:10px;padding:22px;margin:20px 0}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+input[type=text],input[type=number],textarea,select{width:100%;border:1px solid #cdd5e2;border-radius:5px;padding:10px;font:inherit}
+textarea{min-height:68px;resize:vertical}
+.meals{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0}
+.meals label{font-weight:normal}
+button,.button{background:#1a4fa0;color:white;border:0;border-radius:5px;padding:9px 16px;cursor:pointer;text-decoration:none;display:inline-block}
+button.secondary{background:#64748b}button.danger{background:#b73b48}button:disabled{opacity:.5}
+.dish{border-top:1px solid #e6eaf2;padding:15px 0;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.dish:first-child{border-top:0}.meta{color:#68768b;font-size:13px;margin-top:5px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.status{font-size:13px;color:#52627a}
+@media(max-width:600px){.formgrid{grid-template-columns:1fr}.dish{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+  <div><h1>横火高中 · 食堂菜品管理</h1><p class="status">管理员自定义菜品 · 早餐 / 午餐 / 晚餐</p></div>
+  <div><a class="button" href="/admin">返回管理后台</a> <a class="button" href="/campus-card" target="_blank">查看学生端</a></div>
+</div>
+<section class="panel">
+  <h2 id="form-title">新增菜品</h2>
+  <form id="dish-form">
+    <div class="formgrid">
+      <div><label for="name">菜品名称</label><input id="name" type="text" maxlength="60" placeholder="例如：糖醋里脊" required></div>
+      <div><label for="price">价格（元）</label><input id="price" type="number" min="0" max="1000" step="0.01" placeholder="12.00" required></div>
+      <div><label for="category">菜品分类</label><input id="category" type="text" maxlength="30" list="categories" placeholder="家常菜" required>
+        <datalist id="categories"><option value="家常菜"><option value="主食"><option value="主食汤品"><option value="粥与饮品"><option value="横火特色"></datalist>
+      </div>
+      <div><label for="emoji">菜品图标（与原菜单一样使用 Emoji）</label><input id="emoji" type="text" maxlength="16" value="🍽️" placeholder="🍲"></div>
+    </div>
+    <div style="margin-top:14px"><label for="description">菜品介绍</label><textarea id="description" maxlength="160" placeholder="例如：外酥里嫩，酸甜开胃"></textarea></div>
+    <div style="margin-top:14px"><label>供应餐次（可多选）</label>
+      <div class="meals">
+        <label><input type="checkbox" name="meal" value="breakfast"> 早餐</label>
+        <label><input type="checkbox" name="meal" value="lunch"> 午餐</label>
+        <label><input type="checkbox" name="meal" value="dinner"> 晚餐</label>
+      </div>
+    </div>
+    <label style="margin:10px 0"><input type="checkbox" id="active" checked> 立即上架</label>
+    <button type="submit" id="save">保存菜品</button>
+    <button type="button" class="secondary" onclick="resetForm()">取消编辑</button>
+    <p id="message" role="status" class="status"></p>
+  </form>
+</section>
+<section class="panel">
+  <h2>已创建的菜品</h2>
+  <div id="dish-list" class="status">正在加载……</div>
+</section>
+</div>
+<script>
+const mealNames={breakfast:"早餐",lunch:"午餐",dinner:"晚餐"};
+let dishes=[],editing=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+function notice(s){$("message").textContent=s}
+async function api(url,method="GET",body){
+  const response=await fetch(url,{method,headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
+  const result=await response.json();
+  if(response.status===401){location.href="/admin/login";throw Error("登录已失效")}
+  if(!result.success)throw Error(result.msg||"操作失败");
+  return result;
+}
+async function load(){
+  try{
+    const result=await api("/api/admin/canteen/dishes");
+    dishes=result.data;
+    $("dish-list").innerHTML=dishes.length?dishes.map(d=>`
+      <div class="dish">
+        <div><strong>${esc(d.emoji)} ${esc(d.name)}</strong> · ¥${Number(d.price).toFixed(2)}
+        <div class="meta">${esc(d.category)} · ${d.meals.map(m=>mealNames[m]).join("、")} · ${d.active?"已上架":"已下架"}</div>
+        <div class="meta">${esc(d.description)}</div></div>
+        <div class="actions">
+          <button type="button" onclick="editDish(${d.id})">编辑</button>
+          <button type="button" class="secondary" onclick="toggleDish(${d.id})">${d.active?"下架":"上架"}</button>
+          <button type="button" class="danger" onclick="deleteDish(${d.id})">删除</button>
+        </div>
+      </div>`).join(""):"还没有自定义菜品，先在上方添加一道吧。";
+  }catch(e){$("dish-list").textContent=e.message}
+}
+function resetForm(){
+  editing=null;$("dish-form").reset();$("form-title").textContent="新增菜品";$("emoji").value="🍽️";$("active").checked=true;notice("");
+}
+function editDish(id){
+  const d=dishes.find(x=>x.id===id);if(!d)return;
+  editing=id;
+  for(const key of ["name","price","category","emoji","description"])$(key).value=d[key];
+  $("active").checked=d.active;
+  document.querySelectorAll('[name="meal"]').forEach(c=>c.checked=d.meals.includes(c.value));
+  $("form-title").textContent="编辑菜品 · "+d.name;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function values(){
+  return {
+    name:$("name").value.trim(),price:Number($("price").value),
+    category:$("category").value.trim(),emoji:$("emoji").value.trim()||"🍽️",
+    description:$("description").value.trim(),
+    meals:[...document.querySelectorAll('[name="meal"]:checked')].map(x=>x.value),
+    active:$("active").checked
+  };
+}
+$("dish-form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const data=values();
+  if(!data.meals.length){notice("请至少选择一个餐次");return}
+  $("save").disabled=true;
+  try{
+    await api(editing?"/api/admin/canteen/dishes/"+editing:"/api/admin/canteen/dishes",editing?"PUT":"POST",data);
+    resetForm();await load();notice("保存成功，学生端菜单已更新");
+  }catch(e){notice(e.message)}
+  finally{$("save").disabled=false}
+});
+async function toggleDish(id){
+  const d=dishes.find(x=>x.id===id);
+  try{await api("/api/admin/canteen/dishes/"+id,"PUT",{...d,active:!d.active});await load()}
+  catch(e){alert(e.message)}
+}
+async function deleteDish(id){
+  const d=dishes.find(x=>x.id===id);
+  if(!confirm("确定删除「"+d.name+"」吗？"))return;
+  try{await api("/api/admin/canteen/dishes/"+id,"DELETE");await load()}
+  catch(e){alert(e.message)}
+}
+load();
+</script>
+</body>
+</html>
