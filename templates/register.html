@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>横火高级中学 · 注册学生账号</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/provinces.js"></script>
+<script src="/static/auth.js"></script>
+<style>
+    .reg-wrap { max-width: 860px; margin: 30px auto; padding: 0 20px; }
+    .reg-card { background:#fff; border:1px solid #dfe3eb; padding:28px 32px; box-shadow:0 4px 14px rgba(0,0,0,.06); }
+    .reg-card h2 { font-size:18px; color:#1a4fa0; border-left:4px solid #a51c30; padding-left:10px; margin-bottom:14px; }
+    .reg-card h3 { font-size:14px; color:#555; margin:18px 0 8px; padding-bottom:4px; border-bottom:1px dashed #d9dce3; }
+    .reg-card .form-row { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+    .reg-card .form-row .field { flex:1 1 240px; min-width:220px; }
+    .reg-card label { display:block; font-size:13px; color:#333; margin-bottom:4px; }
+    .reg-card label .req { color:#c0392b; margin-right:2px; }
+    .reg-card input, .reg-card select {
+        width:100%; border:1px solid #c8ccd5; padding:7px 10px; font-size:14px;
+        border-radius:2px; outline:none; font-family:inherit;
+    }
+    .reg-card input:focus, .reg-card select:focus { border-color:#1a4fa0; box-shadow:0 0 0 2px rgba(26,79,160,.15); }
+    .reg-card input[readonly] { background:#f3f5f9; color:#666; cursor:not-allowed; }
+    .reg-card .radio-group { display:flex; gap:16px; padding-top:4px; }
+    .reg-card .strength { font-size:12px; margin-top:4px; }
+    .strength.weak { color:#c0392b; } .strength.mid { color:#a05b14; } .strength.strong { color:#2d7a3d; }
+    .reg-card .submit { text-align:center; margin-top:20px; }
+    .reg-card .sub-hint { font-size:12px; color:#888; background:#fff7e6; border-left:3px solid #e8b966; padding:8px 10px; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="inner">
+        <img class="emblem" src="/static/校徽.png" alt="校徽">
+        <div class="titles">
+            <h1>横 火 高 级 中 学</h1>
+            <p>HENGHUO  HIGH  SCHOOL  ·  学 生 账 号 注 册</p>
+        </div>
+    </div>
+</header>
+
+<div class="reg-wrap">
+    <div class="reg-card">
+        <h2>注册学生账号</h2>
+
+        <form id="reg-form" onsubmit="doRegister(event)">
+
+            <h3>① 账号安全信息</h3>
+            <div class="form-row">
+                <div class="field">
+                    <label><span class="req">*</span> 账号名（字母/数字/下划线，6-20 位）</label>
+                    <input type="text" id="username" placeholder="例如：heng_2025" pattern="[A-Za-z0-9_]{6,20}" required>
+                </div>
+                <div class="field">
+                    <label><span class="req">*</span> 绑定手机号</label>
+                    <input type="tel" id="phone" maxlength="11" placeholder="11 位手机号" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label><span class="req">*</span> 密码（至少 8 位，字母+数字）</label>
+                    <input type="password" id="password" placeholder="至少 8 位" required oninput="checkPw()">
+                    <div class="strength" id="pw-strength"></div>
+                </div>
+                <div class="field">
+                    <label><span class="req">*</span> 确认密码</label>
+                    <input type="password" id="confirm_password" placeholder="再次输入密码" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>邮箱（选填）</label>
+                    <input type="email" id="email" placeholder="xxx@xxx.com">
+                </div>
+            </div>
+
+            <h3>② 学生身份信息</h3>
+            <div class="form-row">
+                <div class="field">
+                    <label><span class="req">*</span> 姓名</label>
+                    <input type="text" id="name" maxlength="20" required>
+                </div>
+                <div class="field">
+                    <label><span class="req">*</span> 性别</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="gender" value="男" checked> 男</label>
+                        <label><input type="radio" name="gender" value="女"> 女</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label><span class="req">*</span> 出生日期</label>
+                    <input type="date" id="birth_date" required>
+                </div>
+                <div class="field">
+                    <label><span class="req">*</span> 年龄（16-18，允许与生日不一致）</label>
+                    <input type="number" id="age" min="16" max="18" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>出生国家</label>
+                    <select id="birth_country" onchange="toggleChina()">
+                        <option value="中国" selected>中国</option>
+                        <option value="美国">美国</option>
+                        <option value="英国">英国</option>
+                        <option value="日本">日本</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="field" id="china-region">
+                    <label>省 / 市 / 县（三级联动）</label>
+                    <div style="display:flex;gap:6px;">
+                        <select id="birth_province" style="flex:1;"><option value="">省</option></select>
+                        <select id="birth_city" style="flex:1;"><option value="">市</option></select>
+                        <select id="birth_county" style="flex:1;"><option value="">县</option></select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>民族</label>
+                    <input type="text" id="ethnicity" placeholder="如：汉族">
+                </div>
+                <div class="field">
+                    <label>政治面貌</label>
+                    <select id="political_status">
+                        <option value="">请选择</option>
+                        <option>中共党员</option>
+                        <option>共青团员</option>
+                        <option>群众</option>
+                        <option>其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>级段</label>
+                    <input type="text" id="grade_segment" value="高三" readonly>
+                </div>
+                <div class="field">
+                    <label>班级</label>
+                    <select id="class_name" required>
+                        <option value="">请选择班级</option>
+                        <option value="文科班">文科班</option>
+                        <option value="理科班">理科班</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>毕业学校</label>
+                    <input type="text" id="graduate_school" value="横火高级中学">
+                </div>
+            </div>
+
+            <div class="submit">
+                <button type="submit" class="btn btn-primary" style="padding:11px 40px;font-size:15px;">注 册 并 登 录</button>
+                <div class="sub-hint">
+                    注册成功后系统将为你自动分配专属学号，后续可在横火校园门户 / 高考报名 / 食堂等全部子系统使用。
+                </div>
+                <div style="margin-top:10px;font-size:13px;color:#666;">已有账号？<a href="/login">直接登录</a></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ---------- 省市区 ----------
+function initProvinces() {
+    const pSel = document.getElementById("birth_province");
+    Object.keys(window.CHINA_DISTRICTS || {}).forEach(p => {
+        const o = document.createElement("option"); o.value = p; o.textContent = p;
+        pSel.appendChild(o);
+    });
+    pSel.addEventListener("change", updateCity);
+    document.getElementById("birth_city").addEventListener("change", updateCounty);
+}
+function updateCity() {
+    const p = document.getElementById("birth_province").value;
+    const cSel = document.getElementById("birth_city"), xSel = document.getElementById("birth_county");
+    cSel.innerHTML = '<option value="">市</option>'; xSel.innerHTML = '<option value="">县</option>';
+    if (!p || !window.CHINA_DISTRICTS[p]) return;
+    Object.keys(window.CHINA_DISTRICTS[p]).forEach(c => {
+        const o = document.createElement("option"); o.value = c; o.textContent = c; cSel.appendChild(o);
+    });
+}
+function updateCounty() {
+    const p = document.getElementById("birth_province").value;
+    const c = document.getElementById("birth_city").value;
+    const xSel = document.getElementById("birth_county");
+    xSel.innerHTML = '<option value="">县</option>';
+    if (!p || !c || !window.CHINA_DISTRICTS[p][c]) return;
+    window.CHINA_DISTRICTS[p][c].forEach(x => {
+        const o = document.createElement("option"); o.value = x; o.textContent = x; xSel.appendChild(o);
+    });
+}
+function toggleChina() {
+    const val = document.getElementById("birth_country").value;
+    const box = document.getElementById("china-region");
+    box.style.display = val === "中国" ? "flex" : "none";
+}
+initProvinces(); toggleChina();
+
+// ---------- 密码强度 ----------
+function checkPw() {
+    const pw = document.getElementById("password").value;
+    const el = document.getElementById("pw-strength");
+    if (!pw) { el.textContent = ""; el.className = "strength"; return; }
+    let s = 0;
+    if (pw.length >= 8) s++;
+    if (/[A-Za-z]/.test(pw)) s++;
+    if (/\d/.test(pw)) s++;
+    if (s < 2) { el.textContent = "强度弱：至少 8 位 + 字母 + 数字"; el.className = "strength weak"; }
+    else if (s === 2) { el.textContent = "强度合格"; el.className = "strength mid"; }
+    else { el.textContent = "强度良好"; el.className = "strength strong"; }
+}
+
+// ---------- 注册 ----------
+async function doRegister(e) {
+    e.preventDefault();
+    const d = {
+        username: document.getElementById("username").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        password: document.getElementById("password").value,
+        confirm_password: document.getElementById("confirm_password").value,
+        email: document.getElementById("email").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        gender: document.querySelector('input[name="gender"]:checked').value,
+        birth_date: document.getElementById("birth_date").value,
+        age: document.getElementById("age").value,
+        birth_country: document.getElementById("birth_country").value,
+        birth_province: document.getElementById("birth_province").value,
+        birth_city: document.getElementById("birth_city").value,
+        birth_county: document.getElementById("birth_county").value,
+        ethnicity: document.getElementById("ethnicity").value.trim(),
+        political_status: document.getElementById("political_status").value,
+        grade_segment: document.getElementById("grade_segment").value,
+        class_name: document.getElementById("class_name").value.trim(),
+        graduate_school: document.getElementById("graduate_school").value.trim(),
+    };
+    const btn = e.submitter;
+    btn.disabled = true; btn.textContent = "注册中...";
+    const res = await Auth.register(d);
+    btn.disabled = false; btn.textContent = "注 册 并 登 录";
+
+    if (!res.success) { showToast(res.msg || "注册失败", "error"); return; }
+    const u = res.data;
+    showToast(`注册成功！你的学号：${u.student_no}`, "success");
+    setTimeout(() => {
+        if (confirm(`🎉 账号注册成功！\n\n账号：${u.username}\n专属学号：${u.student_no}\n姓名：${u.name}\n\n请妥善保存学号，点击确定进入学校官网。`))
+            location.href = "/archive";
+    }, 400);
+}
+
+Auth.me().then(u => { if (u) location.href = "/archive"; });
+</script>
+
+<footer style="text-align:center;padding:20px 12px;font-size:12px;color:#888;border-top:1px solid #eee;margin-top:30px;">横火企划模拟系统 · 仅供创作使用，非真实政务/学籍系统</footer>
+</body>
+</html>
